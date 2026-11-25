@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Confidential assessment brief
+/InsuranceClaimsAssessment/Assessment/
+
+# Local working notes
+/CLAUDE.md
