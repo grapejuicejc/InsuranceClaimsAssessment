@@ -1,0 +1,61 @@
+<main>
+  <p><a routerLink="/">Back to my claims</a></p>
+  <h1>Report an incident</h1>
+
+  @if (loadError()) {
+    <p class="error" role="alert">{{ loadError() }}</p>
+  } @else if (policies(); as list) {
+    @if (list.length === 0) {
+      <p>You have no policies to claim on.</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label for="policyId">Policy</label>
+        <select id="policyId" formControlName="policyId">
+          <option [ngValue]="null">Choose a policy</option>
+          @for (policy of list; track policy.id) {
+            <option [ngValue]="policy.id">
+              {{ policy.policyNumber }} ({{ policy.coverType }})
+            </option>
+          }
+        </select>
+        @if (form.controls.policyId.touched && form.controls.policyId.invalid) {
+          <p class="error">Choose a policy.</p>
+        }
+
+        <label for="incidentDate">Incident date</label>
+        <input id="incidentDate" type="date" formControlName="incidentDate" />
+        @if (form.controls.incidentDate.touched && form.controls.incidentDate.invalid) {
+          <p class="error">Enter the incident date.</p>
+        }
+
+        <label for="description">What happened?</label>
+        <textarea id="description" rows="5" formControlName="description"></textarea>
+        @if (form.controls.description.touched && form.controls.description.invalid) {
+          <p class="error">Describe what happened, in at most 2000 characters.</p>
+        }
+
+        <label for="estimatedAmount">Estimated amount (optional)</label>
+        <input
+          id="estimatedAmount"
+          type="number"
+          min="0.01"
+          step="0.01"
+          formControlName="estimatedAmount"
+        />
+        @if (form.controls.estimatedAmount.touched && form.controls.estimatedAmount.invalid) {
+          <p class="error">Enter an amount above zero, or leave it empty.</p>
+        }
+
+        @if (error()) {
+          <p class="error" role="alert">{{ error() }}</p>
+        }
+
+        <button type="submit" [disabled]="busy()">
+          {{ busy() ? 'Sending...' : 'Report incident' }}
+        </button>
+      </form>
+    }
+  } @else {
+    <p>Loading...</p>
+  }
+</main>

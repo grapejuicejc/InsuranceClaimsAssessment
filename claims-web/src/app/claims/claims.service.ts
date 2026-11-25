@@ -46,9 +46,32 @@ export interface ClaimDetails extends ClaimListItem {
   decision: ClaimDecisionItem | null;
 }
 
+export interface PolicyItem {
+  id: number;
+  policyNumber: string;
+  coverType: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface CreateClaimRequest {
+  policyId: number;
+  incidentDate: string;
+  description: string;
+  estimatedAmount: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClaimsService {
   private readonly http = inject(HttpClient);
+
+  getPolicies(): Observable<PolicyItem[]> {
+    return this.http.get<PolicyItem[]>('/api/policies');
+  }
+
+  create(request: CreateClaimRequest): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>('/api/claims', request);
+  }
 
   getMine(): Observable<ClaimListItem[]> {
     return this.http.get<ClaimListItem[]>('/api/claims');

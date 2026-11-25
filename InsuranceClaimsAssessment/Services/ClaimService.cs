@@ -18,6 +18,22 @@ namespace InsuranceClaimsAssessment.Services
             _db = db;
         }
 
+        public async Task<List<PolicyItem>> GetPoliciesForClaimantAsync(int claimantId)
+        {
+            return await _db.Policies
+                .Where(p => p.ClaimantId == claimantId)
+                .OrderBy(p => p.PolicyNumber)
+                .Select(p => new PolicyItem
+                {
+                    Id = p.Id,
+                    PolicyNumber = p.PolicyNumber,
+                    CoverType = p.CoverType.ToString(),
+                    StartDate = DateOnly.FromDateTime(p.StartDate),
+                    EndDate = DateOnly.FromDateTime(p.EndDate)
+                })
+                .ToListAsync();
+        }
+
         public async Task<ServiceResult<ClaimResponse>> CreateAsync(int claimantId, CreateClaimRequest request)
         {
             var policy = await _db.Policies
