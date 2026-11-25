@@ -14,6 +14,7 @@ builder.Services.AddDbContext<ClaimsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ClaimsDb")));
 
 builder.Services.AddSingleton<TokenService>();
+builder.Services.AddScoped<ClaimService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing. Set it with 'dotnet user-secrets'.");
