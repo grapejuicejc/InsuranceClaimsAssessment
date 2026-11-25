@@ -3,8 +3,8 @@ import { authGuard } from './auth/auth.guard';
 import { claimantGuard } from './auth/claimant.guard';
 import { ClaimDetails } from './claims/claim-details/claim-details';
 import { MyClaims } from './claims/my-claims/my-claims';
-import { Home } from './home/home';
 import { Login } from './login/login';
+import { StaffClaims } from './staff/staff-claims/staff-claims';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -16,6 +16,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   // Staff, and anyone not logged in (the guard sends them to login)
-  { path: '', component: Home, canActivate: [authGuard] },
+  { path: '', component: StaffClaims, canActivate: [authGuard] },
   { path: '**', redirectTo: '' },
 ];

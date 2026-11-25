@@ -1,0 +1,87 @@
+<main>
+  <h1>Claims</h1>
+
+  <nav>
+    @for (item of views; track item.id) {
+      <button
+        type="button"
+        [class.active]="view() === item.id"
+        [attr.aria-pressed]="view() === item.id"
+        (click)="show(item.id)"
+      >
+        {{ item.label }}
+      </button>
+    }
+  </nav>
+
+  @if (message()) {
+    <p role="status">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (selected(); as claim) {
+    <app-decide-claim [claim]="claim" (decided)="decided(claim)" (cancelled)="selected.set(null)" />
+  }
+
+  @if (claims(); as list) {
+    @if (list.length === 0) {
+      <p>No claims here.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Claimant</th>
+            <th>Policy</th>
+            <th>Incident</th>
+            <th>Estimated</th>
+            <th>Status</th>
+            <th>Assigned to</th>
+            <th>Received</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (claim of list; track claim.id) {
+            <tr>
+              <td>{{ claim.referenceNumber }}</td>
+              <td>{{ claim.claimantName }}</td>
+              <td>{{ claim.policyNumber }} ({{ claim.coverType }})</td>
+              <td>{{ claim.incidentDate | date: 'mediumDate' }}<br />{{ claim.description }}</td>
+              <td>
+                @if (claim.estimatedAmount !== null) {
+                  {{ claim.estimatedAmount | number: '1.2-2' }}
+                }
+              </td>
+              <td>
+                {{ claim.status | claimStatus }}
+                @if (claim.waitingForClaimant) {
+                  <span class="notice">Waiting for claimant</span>
+                }
+              </td>
+              <td>{{ claim.assignedStaffName }}</td>
+              <td>{{ claim.createdAt | date: 'medium' }}</td>
+              <td>
+                @if (claim.status === 'Submitted') {
+                  <button type="button" [disabled]="busy()" (click)="pickUp(claim)">Pick up</button>
+                } @else if (view() === 'mine' && claim.status === 'UnderReview') {
+                  <button
+                    type="button"
+                    [disabled]="selected() !== null"
+                    (click)="selected.set(claim)"
+                  >
+                    Decide
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <p>Loading...</p>
+  }
+</main>

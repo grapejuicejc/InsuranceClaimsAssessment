@@ -1,0 +1,31 @@
+<section>
+  <h2>Decide {{ claim().referenceNumber }}</h2>
+  <p>{{ claim().description }}</p>
+  @if (claim().estimatedAmount !== null) {
+    <p>Estimated by the claimant: {{ claim().estimatedAmount | number: '1.2-2' }}</p>
+  }
+
+  <form [formGroup]="form">
+    <label for="reason">Reason</label>
+    <textarea id="reason" rows="3" formControlName="reason"></textarea>
+    @if (form.controls.reason.touched && form.controls.reason.invalid) {
+      <p class="error">Enter a reason of at most 2000 characters.</p>
+    }
+
+    <label for="amount">Settled amount (only to settle)</label>
+    <input id="amount" type="number" min="0.01" step="0.01" formControlName="amount" />
+    @if (form.controls.amount.touched && form.controls.amount.invalid) {
+      <p class="error">Enter an amount above zero.</p>
+    }
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      <button type="button" [disabled]="busy()" (click)="settle()">Settle</button>
+      <button type="button" [disabled]="busy()" (click)="reject()">Reject</button>
+      <button type="button" [disabled]="busy()" (click)="cancelled.emit()">Cancel</button>
+    </div>
+  </form>
+</section>

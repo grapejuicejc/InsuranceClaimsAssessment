@@ -6,6 +6,7 @@ body {
 }
 
 input,
+textarea,
 button {
   padding: 0.5rem;
   font: inherit;
