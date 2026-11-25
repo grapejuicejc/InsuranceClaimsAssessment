@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
 namespace InsuranceClaimsAssessment.Entities
 {
     public class ClaimDecision
@@ -16,12 +13,9 @@ namespace InsuranceClaimsAssessment.Entities
         public required string Reason { get; set; }
 
         // Null when rejected
-        [Precision(18, 2)]
         public decimal? SettledAmount { get; set; }
 
         public int DecidedByUserId { get; set; }
-
-        [ForeignKey(nameof(DecidedByUserId))]
         public User DecidedBy { get; set; } = null!;
 
         // UTC

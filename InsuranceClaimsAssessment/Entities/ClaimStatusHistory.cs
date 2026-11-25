@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace InsuranceClaimsAssessment.Entities
 {
     public class ClaimStatusHistory
@@ -15,8 +13,6 @@ namespace InsuranceClaimsAssessment.Entities
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
         public int ChangedByUserId { get; set; }
-
-        [ForeignKey(nameof(ChangedByUserId))]
         public User ChangedBy { get; set; } = null!;
     }
 }

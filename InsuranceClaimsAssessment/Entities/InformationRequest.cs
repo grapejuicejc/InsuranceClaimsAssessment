@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace InsuranceClaimsAssessment.Entities
 {
     public class InformationRequest
@@ -12,8 +10,6 @@ namespace InsuranceClaimsAssessment.Entities
         public required string Message { get; set; }
 
         public int RequestedByUserId { get; set; }
-
-        [ForeignKey(nameof(RequestedByUserId))]
         public User RequestedBy { get; set; } = null!;
 
         // UTC

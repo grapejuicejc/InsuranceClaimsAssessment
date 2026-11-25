@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
-namespace InsuranceClaimsAssessment.Entities
+﻿namespace InsuranceClaimsAssessment.Entities
 {
     public class Claim
     {
@@ -11,8 +8,6 @@ namespace InsuranceClaimsAssessment.Entities
         public required string ReferenceNumber { get; set; }
 
         public int ClaimantId { get; set; }
-
-        [InverseProperty(nameof(User.Claims))]
         public User Claimant { get; set; } = null!;
 
         // Null until a staff member picks up the claim
@@ -27,7 +22,6 @@ namespace InsuranceClaimsAssessment.Entities
         public required string Description { get; set; }
 
         // Null until estimated
-        [Precision(18, 2)]
         public decimal? EstimatedAmount { get; set; }
 
         public ClaimStatus Status { get; set; } = ClaimStatus.Submitted;
@@ -37,6 +31,9 @@ namespace InsuranceClaimsAssessment.Entities
 
         // UTC
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Set by SQL Server on every save, so a stale update is refused
+        public byte[] RowVersion { get; set; } = [];
 
         public ICollection<ClaimStatusHistory> StatusHistory { get; set; } = new List<ClaimStatusHistory>();
 

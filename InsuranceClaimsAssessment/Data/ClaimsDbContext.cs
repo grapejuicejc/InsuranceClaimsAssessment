@@ -1,5 +1,6 @@
 ﻿using InsuranceClaimsAssessment.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceClaimsAssessment.Data
 {
@@ -27,6 +28,11 @@ namespace InsuranceClaimsAssessment.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // SQL Server does not store the UTC marker, so restore it on read
+            var utc = new ValueConverter<DateTime, DateTime>(
+                value => value,
+                value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
             modelBuilder.Entity<User>(e =>
             {
                 e.HasIndex(u => u.Email).IsUnique();
@@ -34,6 +40,7 @@ namespace InsuranceClaimsAssessment.Data
                 e.Property(u => u.PasswordHash).HasMaxLength(512);
                 e.Property(u => u.DisplayName).HasMaxLength(100);
                 e.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+                e.Property(u => u.CreatedAt).HasConversion(utc);
             });
 
             modelBuilder.Entity<Policy>(e =>
@@ -55,6 +62,9 @@ namespace InsuranceClaimsAssessment.Data
                 e.Property(c => c.Description).HasMaxLength(2000);
                 e.Property(c => c.Status).HasConversion<string>().HasMaxLength(30);
                 e.Property(c => c.EstimatedAmount).HasPrecision(18, 2);
+                e.Property(c => c.CreatedAt).HasConversion(utc);
+                e.Property(c => c.UpdatedAt).HasConversion(utc);
+                e.Property(c => c.RowVersion).IsRowVersion();
 
                 e.HasOne(c => c.Claimant)
                     .WithMany(u => u.Claims)
@@ -75,11 +85,12 @@ namespace InsuranceClaimsAssessment.Data
             modelBuilder.Entity<ClaimStatusHistory>(e =>
             {
                 e.Property(h => h.Status).HasConversion<string>().HasMaxLength(30);
+                e.Property(h => h.ChangedAt).HasConversion(utc);
 
                 e.HasOne(h => h.Claim)
                     .WithMany(c => c.StatusHistory)
                     .HasForeignKey(h => h.ClaimId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 e.HasOne(h => h.ChangedBy)
                     .WithMany()
@@ -91,11 +102,13 @@ namespace InsuranceClaimsAssessment.Data
             {
                 e.Property(r => r.Message).HasMaxLength(2000);
                 e.Property(r => r.ResponseText).HasMaxLength(2000);
+                e.Property(r => r.RequestedAt).HasConversion(utc);
+                e.Property(r => r.RespondedAt).HasConversion(utc);
 
                 e.HasOne(r => r.Claim)
                     .WithMany(c => c.InformationRequests)
                     .HasForeignKey(r => r.ClaimId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 e.HasOne(r => r.RequestedBy)
                     .WithMany()
@@ -108,11 +121,12 @@ namespace InsuranceClaimsAssessment.Data
                 e.Property(d => d.Outcome).HasConversion<string>().HasMaxLength(30);
                 e.Property(d => d.Reason).HasMaxLength(2000);
                 e.Property(d => d.SettledAmount).HasPrecision(18, 2);
+                e.Property(d => d.DecidedAt).HasConversion(utc);
 
                 e.HasOne(d => d.Claim)
                     .WithOne(c => c.Decision)
                     .HasForeignKey<ClaimDecision>(d => d.ClaimId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 e.HasOne(d => d.DecidedBy)
                     .WithMany()
@@ -124,11 +138,12 @@ namespace InsuranceClaimsAssessment.Data
             {
                 e.Property(a => a.FileName).HasMaxLength(260);
                 e.Property(a => a.ContentType).HasMaxLength(100);
+                e.Property(a => a.UploadedAt).HasConversion(utc);
 
                 e.HasOne(a => a.Claim)
                     .WithMany(c => c.Attachments)
                     .HasForeignKey(a => a.ClaimId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 e.HasOne(a => a.InformationRequest)
                     .WithMany()
