@@ -10,7 +10,7 @@ claims and settle or reject them.
 > requests, the team dashboard and outstanding liability were **not built**. See
 > [What was missed](#what-was-missed-because-of-time).
 
-## Contents
+## Setting Up
 
 1. [What you need](#1-what-you-need)
 2. [Get the code](#2-get-the-code)
@@ -47,20 +47,10 @@ All commands below are for **PowerShell**.
 
 ## 2. Get the code
 
-The repository is private, so you need to have been given access.
-
 ```powershell
 git clone https://github.com/grapejuicejc/InsuranceClaimsAssessment.git
 cd InsuranceClaimsAssessment
 ```
-
-If you were sent a ZIP file, extract it and open PowerShell in the folder that contains `InsuranceClaimsAssessment.slnx`.
-This README calls it the **root folder**.
-
-| Folder | Contents |
-|---|---|
-| `InsuranceClaimsAssessment/` | Backend API |
-| `claims-web/` | Angular frontend |
 
 ## 3. Set up the backend
 
@@ -166,7 +156,6 @@ The password for every demo account is `Password123!`.
 
 These are made-up accounts for local use only. They are added in Development, and only when there are no users.
 
-**Tip:** use one normal and one private browser window to be logged in as a claimant and as staff at the same time.
 
 ## 7. A guided tour
 
@@ -193,43 +182,7 @@ Pages do not refresh by themselves.
 | Settle without an amount | "Enter an amount to settle." |
 | Log in with a wrong password | "Invalid email or password." |
 
-### Look at the API
 
-| Method | Address | Who |
-|---|---|---|
-| `POST` | `/api/auth/login` | Anyone |
-| `GET` | `/api/policies` | Claimant: own policies |
-| `POST` | `/api/claims` | Claimant: report an incident |
-| `GET` | `/api/claims` | Claimant: own claims |
-| `GET` | `/api/claims/{id}` | Claimant: own claim, with history and decision |
-| `GET` | `/api/staff/claims?status=Submitted&mine=true` | Staff: both filters are optional |
-| `POST` | `/api/claims/{id}/pickup` | Staff |
-| `POST` | `/api/claims/{id}/settle` | Assigned staff member |
-| `POST` | `/api/claims/{id}/reject` | Assigned staff member |
-
-`InsuranceClaimsAssessment/InsuranceClaimsAssessment.http` has sample requests for Visual Studio. The template's
-`/weatherforecast` sample is still there and is not part of the solution.
-
-### Where to look in the code
-
-| To see | Open |
-|---|---|
-| Rules for reporting and tracking | `InsuranceClaimsAssessment/Services/ClaimService.cs` |
-| Rules for pickup and decisions | `InsuranceClaimsAssessment/Services/StaffClaimService.cs` |
-| Database mapping | `InsuranceClaimsAssessment/Data/ClaimsDbContext.cs` |
-| The frontend/backend contract | `InsuranceClaimsAssessment/Contracts/` |
-| Angular login and token handling | `claims-web/src/app/auth/` |
-| Claimant pages | `claims-web/src/app/claims/` |
-| Staff pages | `claims-web/src/app/staff/` |
-
-### Run the test
-
-```powershell
-cd claims-web
-npx ng test --watch=false
-```
-
-There is one small frontend test. There are no backend tests.
 
 ## 8. Problems and fixes
 
@@ -264,17 +217,6 @@ $env:ConnectionStrings__ClaimsDb = "Server=YOUR_SERVER;Database=InsuranceClaimsA
 | **Safety** | Two staff members cannot pick up the same claim; a claim cannot be decided twice; claimants see only their own claims and policies |
 | **Frontend** | One Angular app for both roles: login, claimant pages, staff pages |
 
-### What was tested
-
-There is no automated backend test suite. Checks were run by hand and with temporary scripts that are not in the
-repository.
-
-| Tested on | What |
-|---|---|
-| SQL Server LocalDB | Migration, seed data, login, reporting through the API, tracking, pickup |
-| SQLite, in a temporary copy | Settle, reject, 10 pickups at once, 10 decisions at once, the report page, the staff pages |
-
-Settling, rejecting and simultaneous requests have **not** been run on SQL Server.
 
 ## What was missed because of time
 
@@ -310,54 +252,6 @@ The exercise was time-limited. These parts are **not built**:
 - A description of only spaces is refused with a general message.
 - The TypeScript types are copied by hand from the API's `Contracts` classes.
 - The Angular proxy is for development only. A deployed version would need a reverse proxy or CORS.
-
-## How it is designed
-
-### Claim lifecycle
-
-```
-Submitted  ->  UnderReview  ->  Settled
-                            ->  Rejected
-```
-
-Any staff member can pick up a `Submitted` claim. After that, only the assigned staff member can decide it. Settling
-needs an amount and a reason; rejecting needs a reason.
-
-"Waiting for the claimant" is not a status. It is worked out from an unanswered information request.
-
-### Entities
-
-```
-User   1 --- *  Policy
-User   1 --- *  Claim                (the claimant)
-User   1 --- *  Claim                (the assigned staff member, empty until pickup)
-Policy 1 --- *  Claim
-Claim  1 --- *  ClaimStatusHistory
-Claim  1 --- *  InformationRequest
-Claim  1 --- *  Attachment
-Claim  1 --- 0..1  ClaimDecision
-InformationRequest  1 --- *  Attachment   (optional)
-```
-
-### One service
-
-It is one backend service with one database. Saving a claim's status, history and decision together needs a single
-transaction, and splitting it would add work without a benefit at this size.
-
-### REST now, events later
-
-REST is used for actions, because the user needs the answer immediately. Kafka was planned for announcing what happened,
-so that work which can wait does not slow the user down. **This part is design only:**
-
-- Events: `ClaimSubmitted`, `ClaimPickedUp`, `ClaimSettled`, `ClaimRejected`
-- One topic, keyed by claim ID, so each claim's events stay in order
-- An interface with in-memory and Kafka versions, chosen by a setting, so the app starts without Kafka
-- Published after the save. An outbox table would stop events being lost while Kafka is down
-
-### Simultaneous changes
-
-`Claim` has a SQL Server `rowversion`. If someone else saved the claim first, the second save is refused and the API
-answers 409. A unique index also allows only one decision per claim.
 
 ### Security
 
