@@ -1,4 +1,5 @@
 using InsuranceClaimsAssessment.Data;
+using InsuranceClaimsAssessment.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +12,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<ClaimsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ClaimsDb")));
+
+builder.Services.AddSingleton<TokenService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing. Set it with 'dotnet user-secrets'.");

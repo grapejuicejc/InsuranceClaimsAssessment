@@ -4,3 +4,7 @@ GET {{InsuranceClaimsAssessment_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+POST https://localhost:7140/api/auth/login
+Content-Type: application/json
+
+  { "email": "claimant1@example.com", "password": "Password123!" }
