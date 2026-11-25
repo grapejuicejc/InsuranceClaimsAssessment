@@ -1,0 +1,7 @@
+@if (session(); as user) {
+  <main>
+    <h1>Welcome, {{ user.displayName }}</h1>
+    <p>Role: {{ user.role }}</p>
+    <button type="button" (click)="logout()">Log out</button>
+  </main>
+}

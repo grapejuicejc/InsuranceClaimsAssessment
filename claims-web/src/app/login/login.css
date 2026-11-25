@@ -1,0 +1,14 @@
+main {
+  max-width: 22rem;
+  margin: 4rem auto;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+button {
+  margin-top: 1rem;
+}
