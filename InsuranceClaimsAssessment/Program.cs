@@ -19,6 +19,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ClaimsDbContext>();
+    await SeedData.AddAsync(db);
 }
 
 app.UseHttpsRedirection();
