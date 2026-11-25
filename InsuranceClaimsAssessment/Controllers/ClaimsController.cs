@@ -6,10 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceClaimsAssessment.Controllers
 {
-    [ApiController]
     [Route("api/claims")]
     [Authorize]
-    public class ClaimsController : ControllerBase
+    public class ClaimsController : ApiControllerBase
     {
         private readonly ClaimService _claimService;
 
@@ -17,9 +16,6 @@ namespace InsuranceClaimsAssessment.Controllers
         {
             _claimService = claimService;
         }
-
-        // From the token, never from the request
-        private int UserId => int.Parse(User.FindFirst("sub")!.Value);
 
         [HttpPost]
         [Authorize(Roles = nameof(UserRole.Claimant))]
@@ -54,18 +50,6 @@ namespace InsuranceClaimsAssessment.Controllers
             }
 
             return result.Value!;
-        }
-
-        private ObjectResult ToProblem(ServiceError error, string? message)
-        {
-            var statusCode = error switch
-            {
-                ServiceError.NotFound => StatusCodes.Status404NotFound,
-                ServiceError.Invalid => StatusCodes.Status400BadRequest,
-                _ => StatusCodes.Status500InternalServerError
-            };
-
-            return Problem(title: message, statusCode: statusCode);
         }
     }
 }

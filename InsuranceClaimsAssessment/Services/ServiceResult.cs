@@ -3,7 +3,9 @@ namespace InsuranceClaimsAssessment.Services
     public enum ServiceError
     {
         NotFound,
-        Invalid
+        Invalid,
+        Forbidden,
+        Conflict
     }
 
     // Either a value, or the reason there is none
