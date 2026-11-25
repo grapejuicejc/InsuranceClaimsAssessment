@@ -1,1 +1,8 @@
+@if (session(); as user) {
+  <header>
+    <span>{{ user.displayName }}</span>
+    <button type="button" (click)="logout()">Log out</button>
+  </header>
+}
+
 <router-outlet />

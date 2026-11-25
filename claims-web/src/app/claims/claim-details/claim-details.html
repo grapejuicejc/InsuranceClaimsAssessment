@@ -1,0 +1,73 @@
+<main>
+  <p><a routerLink="/">Back to my claims</a></p>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  } @else if (claim(); as claim) {
+    <h1>{{ claim.referenceNumber }}</h1>
+
+    @if (claim.waitingForClaimant) {
+      <p class="notice">We need more information from you. See the requests below.</p>
+    }
+
+    <dl>
+      <dt>Status</dt>
+      <dd>{{ claim.status | claimStatus }}</dd>
+      <dt>Policy</dt>
+      <dd>{{ claim.policyNumber }} ({{ claim.coverType }})</dd>
+      <dt>Incident date</dt>
+      <dd>{{ claim.incidentDate | date: 'mediumDate' }}</dd>
+      <dt>Description</dt>
+      <dd>{{ claim.description }}</dd>
+      <dt>Estimated amount</dt>
+      <dd>
+        @if (claim.estimatedAmount !== null) {
+          {{ claim.estimatedAmount | number: '1.2-2' }}
+        } @else {
+          Not given
+        }
+      </dd>
+    </dl>
+
+    @if (claim.decision; as decision) {
+      <h2>Decision</h2>
+      <dl>
+        <dt>Outcome</dt>
+        <dd>{{ decision.outcome | claimStatus }}</dd>
+        <dt>Reason</dt>
+        <dd>{{ decision.reason }}</dd>
+        @if (decision.settledAmount !== null) {
+          <dt>Settled amount</dt>
+          <dd>{{ decision.settledAmount | number: '1.2-2' }}</dd>
+        }
+        <dt>Decided</dt>
+        <dd>{{ decision.decidedAt | date: 'medium' }}</dd>
+      </dl>
+    }
+
+    @if (claim.informationRequests.length > 0) {
+      <h2>Information requests</h2>
+      <ul>
+        @for (request of claim.informationRequests; track request.id) {
+          <li>
+            <p>{{ request.requestedAt | date: 'medium' }}: {{ request.message }}</p>
+            @if (request.respondedAt) {
+              <p>Your reply: {{ request.responseText }}</p>
+            } @else {
+              <p>Not answered</p>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <h2>History</h2>
+    <ol>
+      @for (item of claim.history; track $index) {
+        <li>{{ item.status | claimStatus }}: {{ item.changedAt | date: 'medium' }}</li>
+      }
+    </ol>
+  } @else {
+    <p>Loading...</p>
+  }
+</main>

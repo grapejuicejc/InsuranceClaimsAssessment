@@ -1,0 +1,45 @@
+<main>
+  <h1>My claims</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  } @else if (claims(); as list) {
+    @if (list.length === 0) {
+      <p>You have no claims yet.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Policy</th>
+            <th>Cover</th>
+            <th>Incident date</th>
+            <th>Status</th>
+            <th>Last updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (claim of list; track claim.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/claims', claim.id]">{{ claim.referenceNumber }}</a>
+              </td>
+              <td>{{ claim.policyNumber }}</td>
+              <td>{{ claim.coverType }}</td>
+              <td>{{ claim.incidentDate | date: 'mediumDate' }}</td>
+              <td>
+                {{ claim.status | claimStatus }}
+                @if (claim.waitingForClaimant) {
+                  <strong class="notice">Waiting for you</strong>
+                }
+              </td>
+              <td>{{ claim.updatedAt | date: 'medium' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <p>Loading...</p>
+  }
+</main>
