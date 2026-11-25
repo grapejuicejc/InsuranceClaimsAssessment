@@ -1,8 +1,15 @@
+using InsuranceClaimsAssessment.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<ClaimsDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ClaimsDb")));
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
