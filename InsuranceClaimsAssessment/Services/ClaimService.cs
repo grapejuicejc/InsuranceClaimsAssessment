@@ -72,6 +72,47 @@ namespace InsuranceClaimsAssessment.Services
             return ServiceResult<ClaimResponse>.Success(ToResponse(claim));
         }
 
+        public async Task<List<ClaimListItem>> GetForClaimantAsync(int claimantId)
+        {
+            return await _db.Claims
+                .Where(c => c.ClaimantId == claimantId)
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new ClaimListItem
+                {
+                    Id = c.Id,
+                    ReferenceNumber = c.ReferenceNumber,
+                    PolicyNumber = c.Policy.PolicyNumber,
+                    CoverType = c.Policy.CoverType.ToString(),
+                    IncidentDate = DateOnly.FromDateTime(c.IncidentDate),
+                    Status = c.Status.ToString(),
+                    WaitingForClaimant = c.Status == ClaimStatus.UnderReview
+                        && c.InformationRequests.Any(r => r.RespondedAt == null),
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ServiceResult<ClaimDetailsResponse>> GetForClaimantByIdAsync(int claimantId, int claimId)
+        {
+            var claim = await _db.Claims
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(c => c.Policy)
+                .Include(c => c.StatusHistory)
+                .Include(c => c.InformationRequests)
+                .Include(c => c.Decision)
+                .SingleOrDefaultAsync(c => c.Id == claimId && c.ClaimantId == claimantId);
+
+            // Same answer for a missing claim and someone else's claim
+            if (claim is null)
+            {
+                return ServiceResult<ClaimDetailsResponse>.Failure(ServiceError.NotFound, "Claim not found.");
+            }
+
+            return ServiceResult<ClaimDetailsResponse>.Success(ToDetails(claim));
+        }
+
         private static string CreateReferenceNumber(DateTime now)
         {
             return $"CLM-{now.Year}-{RandomNumberGenerator.GetString(ReferenceCharacters, 8)}";
@@ -91,6 +132,51 @@ namespace InsuranceClaimsAssessment.Services
                 Status = claim.Status.ToString(),
                 CreatedAt = claim.CreatedAt,
                 UpdatedAt = claim.UpdatedAt
+            };
+        }
+
+        private static ClaimDetailsResponse ToDetails(Claim claim)
+        {
+            return new ClaimDetailsResponse
+            {
+                Id = claim.Id,
+                ReferenceNumber = claim.ReferenceNumber,
+                PolicyNumber = claim.Policy.PolicyNumber,
+                CoverType = claim.Policy.CoverType.ToString(),
+                IncidentDate = DateOnly.FromDateTime(claim.IncidentDate),
+                Description = claim.Description,
+                EstimatedAmount = claim.EstimatedAmount,
+                Status = claim.Status.ToString(),
+                CreatedAt = claim.CreatedAt,
+                UpdatedAt = claim.UpdatedAt,
+                WaitingForClaimant = claim.Status == ClaimStatus.UnderReview
+                    && claim.InformationRequests.Any(r => r.RespondedAt == null),
+                History = claim.StatusHistory
+                    .OrderBy(h => h.ChangedAt)
+                    .Select(h => new ClaimHistoryItem
+                    {
+                        Status = h.Status.ToString(),
+                        ChangedAt = h.ChangedAt
+                    })
+                    .ToList(),
+                InformationRequests = claim.InformationRequests
+                    .OrderBy(r => r.RequestedAt)
+                    .Select(r => new InformationRequestItem
+                    {
+                        Id = r.Id,
+                        Message = r.Message,
+                        RequestedAt = r.RequestedAt,
+                        ResponseText = r.ResponseText,
+                        RespondedAt = r.RespondedAt
+                    })
+                    .ToList(),
+                Decision = claim.Decision is null ? null : new ClaimDecisionItem
+                {
+                    Outcome = claim.Decision.Outcome.ToString(),
+                    Reason = claim.Decision.Reason,
+                    SettledAmount = claim.Decision.SettledAmount,
+                    DecidedAt = claim.Decision.DecidedAt
+                }
             };
         }
     }
